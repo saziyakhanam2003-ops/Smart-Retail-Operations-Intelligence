@@ -1,0 +1,132 @@
+SELECT COUNT(*) FROM retail_inventory_raw;
+SELECT * 
+FROM retail_inventory_raw
+LIMIT 10;
+
+
+DROP TABLE IF EXISTS retail_inventory_clean;
+
+CREATE TABLE retail_inventory_clean AS
+SELECT
+    TO_DATE(order_date, 'DD-MM-YY') AS order_date,
+    store_id,
+    product_id,
+    category,
+    region,
+    inventory_level,
+    units_sold,
+    units_ordered,
+    demand_forecast,
+    price,
+    discount,
+    weather_condition,
+    holiday_promotion,
+    competitor_pricing,
+    seasonality
+FROM retail_inventory_raw;
+
+SELECT *
+FROM retail_inventory_clean
+LIMIT 10;
+
+ALTER TABLE retail_inventory_clean
+ADD COLUMN revenue NUMERIC(12,2),
+ADD COLUMN inventory_status VARCHAR(20),
+ADD COLUMN demand_level VARCHAR(20),
+ADD COLUMN discount_category VARCHAR(20),
+ADD COLUMN price_band VARCHAR(20);
+
+UPDATE retail_inventory_clean
+SET
+    revenue = units_sold * price * (1 - discount / 100),
+
+    inventory_status =
+        CASE
+            WHEN inventory_level < 100 THEN 'Low Stock'
+            WHEN inventory_level < 300 THEN 'Medium Stock'
+            ELSE 'High Stock'
+        END,
+
+    demand_level =
+        CASE
+            WHEN units_sold >= demand_forecast THEN 'High Demand'
+            ELSE 'Low Demand'
+        END,
+
+    discount_category =
+        CASE
+            WHEN discount = 0 THEN 'No Discount'
+            WHEN discount <= 10 THEN 'Low Discount'
+            WHEN discount <= 20 THEN 'Medium Discount'
+            ELSE 'High Discount'
+        END,
+
+    price_band =
+        CASE
+            WHEN price < 100 THEN 'Budget'
+            WHEN price < 300 THEN 'Mid Range'
+            ELSE 'Premium'
+        END;
+
+
+
+--1
+SELECT
+    category,
+    ROUND(SUM(revenue),2) AS total_revenue
+FROM retail_inventory_clean
+GROUP BY category
+ORDER BY total_revenue DESC;
+
+--2
+SELECT
+    region,
+    ROUND(SUM(revenue),2) AS revenue
+FROM retail_inventory_clean
+GROUP BY region
+ORDER BY revenue DESC;
+
+--3
+SELECT
+    DATE_TRUNC('month', order_date) AS month,
+    ROUND(SUM(revenue),2) AS revenue
+FROM retail_inventory_clean
+GROUP BY month
+ORDER BY month;
+
+
+--4
+SELECT
+    inventory_status,
+    COUNT(*) AS total_products
+FROM retail_inventory_clean
+GROUP BY inventory_status;
+
+
+--5
+SELECT
+    product_id,
+    ROUND(SUM(revenue),2) AS revenue
+FROM retail_inventory_clean
+GROUP BY product_id
+ORDER BY revenue DESC
+LIMIT 10;
+
+--6
+SELECT
+    weather_condition,
+    ROUND(AVG(units_sold),2) AS avg_units_sold
+FROM retail_inventory_clean
+GROUP BY weather_condition
+ORDER BY avg_units_sold DESC;
+
+
+--7
+SELECT
+    seasonality,
+    ROUND(SUM(revenue),2) AS revenue
+FROM retail_inventory_clean
+GROUP BY seasonality
+ORDER BY revenue DESC;
+
+SELECT * FROM retail_inventory_clean;

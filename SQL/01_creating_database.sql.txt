@@ -1,0 +1,24 @@
+DROP TABLE IF EXISTS retail_inventory_raw;
+DROP TABLE retail_inventory_raw;
+
+SET datestyle='ISO,DMY';
+CREATE TABLE retail_inventory_raw (
+    order_date TEXT,
+    store_id VARCHAR(20),
+    product_id VARCHAR(20),
+    category VARCHAR(50),
+    region VARCHAR(50),
+    inventory_level INT,
+    units_sold INT,
+    units_ordered INT,
+    demand_forecast NUMERIC(10,2),
+    price NUMERIC(10,2),
+    discount NUMERIC(10,2),
+    weather_condition VARCHAR(20),
+    holiday_promotion INT,
+    competitor_pricing NUMERIC(10,2),
+    seasonality VARCHAR(20)
+);
+
+
+SELECT COUNT(*) FROM retail_inventory_raw;
